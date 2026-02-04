@@ -1,9 +1,10 @@
-<html lang="en"><head><base target="_blank">
-
-
+<!doctype html>
+<html lang="en">
+<head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Interactive Booth Map</title>
+
 <style>
   body {
     margin: 0;
@@ -29,7 +30,6 @@
   @media (max-width: 800px)  { .map { transform: scale(0.55); } }
   @media (max-width: 600px)  { .map { transform: scale(0.42); } }
   @media (max-width: 480px)  { .map { transform: scale(0.35); } }
-  @media (max-width: 380px)  { .map { transform: scale(0.30); } }
 
   .booth {
     position: absolute;
@@ -43,6 +43,13 @@
     transition: transform 0.1s, box-shadow 0.1s;
     width: 100px;
     height: 60px;
+    text-align: center;
+    padding: 4px;
+  }
+
+  .booth span {
+    font-size: 12px;
+    line-height: 1.2;
   }
 
   .booth:hover {
@@ -50,18 +57,10 @@
     box-shadow: 0 6px 10px rgba(0,0,0,0.2);
   }
 
-  .booth span {
-    font-size: 16px;
-    color: black;
-  }
-
-  #b1 span, #b2 span, #b3 span, #b4 span, #b5 span, #b6 span, #b7 span, #b9 span {
-    color: red;
-  }
-
+  /* BOOKED — keep original color */
   .booth.booked {
-    background: #bfbfbf !important;
-    border-color: #6b6b6b !important;
+    cursor: not-allowed;
+    opacity: 0.75; /* visual hint only */
   }
 
   .pink-booth {
@@ -77,19 +76,8 @@
     padding: 5px 8px;
     border-radius: 6px;
     font-size: 13px;
-    white-space: nowrap;
     display: none;
     z-index: 999;
-    max-width: 90vw;
-    overflow-wrap: break-word;
-  }
-
-  @media (max-width: 600px) {
-    .tooltip {
-      font-size: 11px;
-      padding: 4px 6px;
-      white-space: normal;
-    }
   }
 
   .center-rect {
@@ -103,35 +91,37 @@
     height: 220px;
   }
 
-  #b10 { left: 60px;  top: 40px; }
-  #b20 { left: 170px; top: 40px; }
-  #b7  { left: 280px; top: 40px; }
-  #b8  { left: 390px; top: 40px; }
-  #b9  { left: 500px; top: 40px; }
-  #b19 { left: 610px; top: 40px; }
-  #b18 { left: 720px; top: 40px; }
+  /* Booth positions */
+  #b10{ left:60px; top:40px; }
+  #b20{ left:170px; top:40px; }
+  #b7 { left:280px; top:40px; }
+  #b8 { left:390px; top:40px; }
+  #b9 { left:500px; top:40px; }
+  #b19{ left:610px; top:40px; }
+  #b18{ left:720px; top:40px; }
 
-  #b17 { left: 720px; top: 130px; }
-  #b16 { left: 720px; top: 220px; }
-  #b15 { left: 720px; top: 310px; }
+  #b17{ left:720px; top:130px; }
+  #b16{ left:720px; top:220px; }
+  #b15{ left:720px; top:310px; }
 
-  #b11 { left: 60px;  bottom: 120px; }
-  #b12 { left: 170px; bottom: 120px; }
-  #b1  { left: 280px; bottom: 120px; }
-  #b2  { left: 460px; bottom: 120px; }
-  #b13 { left: 570px; bottom: 120px; }
-  #b14 { left: 680px; bottom: 120px; }
+  #b11{ left:60px; bottom:120px; }
+  #b12{ left:170px; bottom:120px; }
+  #b1 { left:280px; bottom:120px; }
+  #b2 { left:460px; bottom:120px; }
+  #b13{ left:570px; bottom:120px; }
+  #b14{ left:680px; bottom:120px; }
 
-  #b4  { left: 200px; top: 180px; }
-  #b3  { left: 200px; top: 260px; }
-  #b6  { left: 480px; top: 180px; }
-  #b5  { left: 480px; top: 260px; }
+  #b4 { left:200px; top:180px; }
+  #b3 { left:200px; top:260px; }
+  #b6 { left:480px; top:180px; }
+  #b5 { left:480px; top:260px; }
 
-  #p5 { left: 60px;  bottom: 40px; }
-  #p4 { left: 170px; bottom: 40px; }
-  #p3 { left: 280px; bottom: 40px; }
-  #p2 { left: 460px; bottom: 40px; }
-  #p1 { left: 570px; bottom: 40px; }
+  /* UMKM */
+  #p5 { left:60px; bottom:40px; }
+  #p4 { left:170px; bottom:40px; }
+  #p3 { left:280px; bottom:40px; }
+  #p2 { left:460px; bottom:40px; }
+  #p1 { left:570px; bottom:40px; }
 
   .door {
     position: absolute;
@@ -139,182 +129,108 @@
     left: 390px;
     width: 60px;
     height: 10px;
-    background: #ffffff;
+    background: white;
     border: 2px dashed #888;
-    border-radius: 2px;
-  }
-
-  .legend-toggle {
-    position: fixed;
-    right: 40px;
-    bottom: 40px;
-    background: rgba(255,255,255,0.9);
-    border: 1px solid #aaa;
-    border-radius: 6px;
-    padding: 6px 10px;
-    cursor: pointer;
-    z-index: 1001;
-    font-size: 14px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-  }
-
-  .legend {
-    position: fixed;
-    right: 40px;
-    bottom: 80px;
-    background: rgba(255,255,255,0.97);
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    padding: 10px 14px;
-    font-size: 14px;
-    line-height: 1.5;
-    box-shadow: 0 2px 6px rgba(0,0,0,0.15);
-    z-index: 1000;
-    max-width: 220px;
-    display: none;
-  }
-
-  .legend.show { display: block; }
-
-  .legend div {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    flex-wrap: nowrap;
-  }
-
-  .color-box {
-    width: 14px;
-    height: 14px;
-    border: 1px solid #666;
-    border-radius: 3px;
-    flex-shrink: 0;
-  }
-
-  .green { background: #d7f4c4; }
-  .pink { background: #ffb6d9; }
-  .grey { background: #bfbfbf; }
-
-  @media (max-width: 700px) {
-    .legend-toggle {
-      right: 10px;
-      bottom: 10px;
-      font-size: 12px;
-      padding: 5px 8px;
-    }
-    .legend {
-      right: 10px;
-      bottom: 50px;
-      font-size: 12px;
-      padding: 6px 8px;
-      max-width: 160px;
-    }
-  }
-
-  @media (max-width: 480px) {
-    .legend {
-      right: 8px;
-      bottom: 45px;
-      font-size: 11px;
-      padding: 5px 7px;
-      max-width: 140px;
-    }
   }
 </style>
 </head>
+
 <body>
-  <div class="map">
-    <div class="booth" id="b10"><span>#10</span></div>
-    <div class="booth" id="b20"><span>#20</span></div>
-    <div class="booth" id="b7"><span>#7</span></div>
-    <div class="booth booked" id="b8"><span>#8</span></div>
-    <div class="booth" id="b9"><span>#9</span></div>
-    <div class="booth" id="b19"><span>#19</span></div>
-    <div class="booth" id="b18"><span>#18</span></div>
-    <div class="booth" id="b17"><span>#17</span></div>
-    <div class="booth" id="b16"><span>#16</span></div>
-    <div class="booth" id="b15"><span>#15</span></div>
-    <div class="booth booked" id="b11"><span>#11</span></div>
-    <div class="booth" id="b12"><span>#12</span></div>
-    <div class="booth" id="b1"><span>#1</span></div>
-    <div class="booth" id="b2"><span>#2</span></div>
-    <div class="booth" id="b13"><span>#13</span></div>
-    <div class="booth" id="b14"><span>#14</span></div>
-    <div class="booth booked" id="b4"><span>#4</span></div>
-    <div class="booth booked" id="b3"><span>#3</span></div>
-    <div class="booth" id="b6"><span>#6</span></div>
-    <div class="booth booked" id="b5"><span>#5</span></div>
 
-    <div class="booth pink-booth booked" id="p5"><span>#5</span></div>
-    <div class="booth pink-booth" id="p4"><span>#4</span></div>
-    <div class="booth pink-booth" id="p3"><span>#3</span></div>
-    <div class="booth pink-booth booked" id="p2"><span>#2</span></div>
-    <div class="booth pink-booth" id="p1"><span>#1</span></div>
+<div class="map">
+  <!-- STANDARD -->
+  <div class="booth" id="b10"><span></span></div>
+  <div class="booth" id="b20"><span></span></div>
+  <div class="booth" id="b7"><span></span></div>
+  <div class="booth" id="b8"><span></span></div>
+  <div class="booth" id="b9"><span></span></div>
+  <div class="booth" id="b19"><span></span></div>
+  <div class="booth" id="b18"><span></span></div>
+  <div class="booth" id="b17"><span></span></div>
+  <div class="booth" id="b16"><span></span></div>
+  <div class="booth" id="b15"><span></span></div>
+  <div class="booth" id="b11"><span></span></div>
+  <div class="booth" id="b12"><span></span></div>
+  <div class="booth" id="b1"><span></span></div>
+  <div class="booth" id="b2"><span></span></div>
+  <div class="booth" id="b13"><span></span></div>
+  <div class="booth" id="b14"><span></span></div>
+  <div class="booth" id="b4"><span></span></div>
+  <div class="booth" id="b3"><span></span></div>
+  <div class="booth" id="b6"><span></span></div>
+  <div class="booth" id="b5"><span></span></div>
 
-    <div class="center-rect"></div>
-    <div class="door"></div>
-  </div>
+  <!-- UMKM -->
+  <div class="booth pink-booth" id="p5"><span></span></div>
+  <div class="booth pink-booth" id="p4"><span></span></div>
+  <div class="booth pink-booth" id="p3"><span></span></div>
+  <div class="booth pink-booth" id="p2"><span></span></div>
+  <div class="booth pink-booth" id="p1"><span></span></div>
 
-  <div class="tooltip" id="tooltip" style="display: none; left: 770px; top: 272px;">Tersedia<br><strong>Booth Regular 15</strong><br>Rp. 25.000.000</div>
+  <div class="center-rect"></div>
+  <div class="door"></div>
+</div>
 
-  <div class="legend-toggle" onclick="toggleLegend()">ℹ️ Legend</div>
-
-  <div class="legend show" id="legendBox">
-    <div><span class="color-box green"></span> Regular Booth (Available)</div>
-    <div><span class="color-box pink"></span> UMKM Booth (Available)</div>
-    <div><span class="color-box grey"></span> Booked Booth</div>
-  </div>
+<div class="tooltip" id="tooltip"></div>
 
 <script>
-  const tooltip = document.getElementById('tooltip');
-  const booths = document.querySelectorAll('.booth');
+const tooltip = document.getElementById("tooltip");
+const booths = document.querySelectorAll(".booth");
 
-  const booked = {
-    b8: "PT. FERRON Par Pharmaceuticals",
-    b5: "PT. MEDEQ Mandiri Utama",
-    b11: "PT Transmedic Indonesia",
-    b3: "PT Triastri Meditama",
-    b4: "PT. Maju Jaya Medika",
-    p2: "Toko Wiwid Lombok",
-    p5: "Abidzar Pearl"
-  };
+const booked = {
+  b1: "PT. Berjaya Mandarin Opto-Medic",
+  b2: "PT Hanaka Farmasindo",
+  b3: "PT Triastri Meditama",
+  b4: "PT. Maju Jaya Medika",
+  b5: "PT. MEDEQ Mandiri Utama",
+  b6: "PT. Sanbe Farma",
+  b7: "PT Anugerah Pharmindo",
+  b8: "PT. Ferron Par Pharmaceuticals",
+  b9: "PT Erlangga Edi Laboratories (Erela)",
+  b10: "PT Mulya Husada Jaya",
+  b11: "PT Transmedic Indonesia",
+  b12: "PT. Pusaka Mulya Medika",
+  b13: "PT Pancaraya Krisna Mandiri",
+  b14: "PT Optik Tunggal Sempurna",
+  b15: "PT Afina Sinar Cemerlang",
+  b16: "PT. Majasa Tunggal Abadi",
+  b17: "PT OPMIC Perkasa Mandiri",
+  b18: "PT. Inti Cakrawala Jaya",
+  b19: "PT. Topsindo Megah Utama",
+  b20: "PT Tawada Healthcare",
 
-  booths.forEach(b => {
-    const id = b.id;
-    const num = id.replace('b', '').replace('p', '');
-    let text = '';
-    let price = '';
-    let type = '';
+  p1: "Mahavira",
+  p2: "Toko Wiwid Lombok",
+  p3: "Crocus Pearl",
+  p4: "Alif Souvenir",
+  p5: "Abidzar Pearl"
+};
 
-    if (id.startsWith('p')) {
-      type = 'UMKM';
-      price = 'Rp. 2.000.000'; // ✅ updated price
-    } else {
-      type = 'Booth Regular';
-      price = (parseInt(num) <= 9) ? 'Rp. 30.000.000' : 'Rp. 25.000.000';
-    }
+booths.forEach(b => {
+  const id = b.id;
+  const label = b.querySelector("span");
 
-    if (booked[id]) {
-      b.classList.add('booked');
-      text = `<strong>Sudah dibooking</strong><br>${type} ${num}<br>${booked[id]}`;
-    } else {
-      text = `Tersedia<br><strong>${type} ${num}</strong><br>${price}`;
-    }
+  if (booked[id]) {
+    b.classList.add("booked");
+    label.textContent = booked[id];
+  } else {
+    label.textContent = "AVAILABLE";
+  }
 
-    b.addEventListener('mousemove', e => {
-      tooltip.innerHTML = text;
-      tooltip.style.display = 'block';
-      tooltip.style.left = Math.min(e.pageX + 10, window.innerWidth - 150) + 'px';
-      tooltip.style.top = Math.max(e.pageY - 40, 10) + 'px';
-    });
-
-    b.addEventListener('mouseleave', () => tooltip.style.display = 'none');
+  b.addEventListener("mousemove", e => {
+    tooltip.innerHTML = booked[id]
+      ? `<strong>Booked</strong><br>${booked[id]}`
+      : `<strong>Available</strong>`;
+    tooltip.style.display = "block";
+    tooltip.style.left = e.pageX + 12 + "px";
+    tooltip.style.top = e.pageY - 30 + "px";
   });
 
-  function toggleLegend() {
-    document.getElementById("legendBox").classList.toggle("show");
-  }
+  b.addEventListener("mouseleave", () => {
+    tooltip.style.display = "none";
+  });
+});
 </script>
 
-
-</body></html>
+</body>
+</html>
