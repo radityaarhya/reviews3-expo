@@ -1,0 +1,223 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Interactive Booth Map (Company Names)</title>
+
+<style>
+  :root{
+    --w: 979px;
+    --h: 208px;
+  }
+
+  body{
+    margin:0;
+    background:#fff;
+    display:flex;
+    justify-content:center;
+    align-items:flex-start;
+    min-height:100vh;
+    font-family: Arial, sans-serif;
+  }
+
+  .stage{
+    position:relative;
+    width: min(100vw - 24px, var(--w));
+    aspect-ratio: 979 / 208;
+  }
+
+  .map{
+    position:absolute;
+    left:0; top:0;
+    width: var(--w);
+    height: var(--h);
+    transform-origin: top left;
+    transform: scale(calc((min(100vw - 24px, var(--w))) / var(--w)));
+  }
+
+  .booth{
+    position:absolute;
+    border:2px solid #333;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    font-weight:700;
+    cursor:pointer;
+    transition: transform .1s, box-shadow .1s;
+    line-height:1.2;
+    padding:6px;
+    text-align:center;
+    font-size:13px;
+  }
+
+  .booth:hover{
+    transform: translateY(-2px);
+    box-shadow:0 4px 8px rgba(0,0,0,.2);
+  }
+
+  /* Booth colors */
+  .silver{ background:#e6e6e6; border-color:#888; }
+  .gold{ background:#ffd580; border-color:#b58900; }
+  .blue{ background:#b5dcfe; border-color:#2a6db0; }
+
+  /* BOOKED — keep original color */
+  .booked{
+    cursor:not-allowed;
+    opacity:0.8; /* visual hint only */
+  }
+
+  /* Exact positions */
+  #S1{ left:172px; top:96px; width:46px; height:112px; }
+  #S2{ left:88px;  top:27px; width:73px; height:44px; }
+  #S3{ left:5px;   top:27px; width:73px; height:44px; }
+
+  #G1{ left:316px; top:82px; width:152px; height:56px; }
+  #G2{ left:551px; top:82px; width:152px; height:56px; }
+
+  #P1{ left:823px; top:23px; width:134px; height:168px; }
+
+  /* Tooltip */
+  .tooltip{
+    position:fixed;
+    pointer-events:none;
+    background:rgba(40,40,40,.92);
+    color:#fff;
+    padding:6px 10px;
+    border-radius:6px;
+    font-size:13px;
+    white-space:nowrap;
+    display:none;
+    z-index:1000;
+  }
+
+  /* Legend */
+  .legend-toggle{
+    position:fixed;
+    right:20px;
+    bottom:20px;
+    background:rgba(255,255,255,.9);
+    border:1px solid #aaa;
+    border-radius:6px;
+    padding:6px 10px;
+    cursor:pointer;
+    z-index:1001;
+    font-size:14px;
+    box-shadow:0 2px 4px rgba(0,0,0,.2);
+  }
+
+  .legend{
+    position:fixed;
+    right:20px;
+    bottom:64px;
+    background:rgba(255,255,255,.97);
+    border:1px solid #ccc;
+    border-radius:8px;
+    padding:10px 14px;
+    font-size:14px;
+    line-height:1.5;
+    box-shadow:0 2px 6px rgba(0,0,0,.15);
+    z-index:1000;
+    max-width:260px;
+    display:none;
+  }
+
+  .legend.show{ display:block; }
+
+  .legend div{
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+
+  .color-box{
+    width:14px;
+    height:14px;
+    border:1px solid #666;
+    border-radius:3px;
+  }
+
+  .box-silver{ background:#e6e6e6; }
+  .box-gold{ background:#ffd580; }
+  .box-blue{ background:#b5dcfe; }
+</style>
+</head>
+
+<body>
+
+<div class="stage">
+  <div class="map">
+
+    <div class="booth silver" id="S1"></div>
+    <div class="booth silver" id="S2"></div>
+    <div class="booth silver" id="S3"></div>
+
+    <div class="booth gold" id="G1"></div>
+    <div class="booth gold" id="G2"></div>
+
+    <div class="booth blue" id="P1"></div>
+
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<div class="legend-toggle" onclick="toggleLegend()">ℹ️ Legend</div>
+
+<div class="legend" id="legendBox">
+  <div><span class="color-box box-silver"></span> Silver Booth – Rp. 50.000.000</div>
+  <div><span class="color-box box-gold"></span> Gold Booth – Rp. 80.000.000</div>
+  <div><span class="color-box box-blue"></span> Platinum Booth – Rp. 100.000.000</div>
+</div>
+
+<script>
+  const tooltip = document.getElementById('tooltip');
+  const booths  = document.querySelectorAll('.booth');
+
+  const booked = {
+    "S1": "PT. USM",
+    "S2": "PT. Katamata Optomedik",
+    "S3": "PT. Global Selaras Medika",
+    "G1": "PT Meiji Indonesian Pharmaceutical Industries x PT Ophtalindo Jaya",
+    "G2": "JEC Eye Hospital dan Clinic",
+    "P1": "PT. Cendo"
+  };
+
+  booths.forEach(b => {
+    const id = b.id;
+    let type='', price='';
+
+    if(id.startsWith('S')) { type='Silver Booth'; price='Rp. 50.000.000'; }
+    if(id.startsWith('G')) { type='Gold Booth'; price='Rp. 80.000.000'; }
+    if(id.startsWith('P')) { type='Platinum Booth'; price='Rp. 100.000.000'; }
+
+    let tooltipText = '';
+
+    if(booked[id]){
+      b.classList.add('booked');
+      b.textContent = booked[id];
+      tooltipText = `<strong>Sudah dibooking</strong><br>${type}<br>${booked[id]}`;
+    }else{
+      b.textContent = 'AVAILABLE';
+      tooltipText = `Tersedia<br><strong>${type}</strong><br>${price}`;
+    }
+
+    b.addEventListener('mousemove', e => {
+      tooltip.innerHTML = tooltipText;
+      tooltip.style.display = 'block';
+      tooltip.style.left = Math.min(e.pageX + 10, window.innerWidth - 180) + 'px';
+      tooltip.style.top  = Math.max(e.pageY - 40, 10) + 'px';
+    });
+
+    b.addEventListener('mouseleave', () => {
+      tooltip.style.display = 'none';
+    });
+  });
+
+  function toggleLegend(){
+    document.getElementById('legendBox').classList.toggle('show');
+  }
+</script>
+
+</body>
+</html>
