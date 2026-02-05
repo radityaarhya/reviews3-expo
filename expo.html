@@ -3,378 +3,232 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Combined Booth Layout</title>
+<title>Interactive Booth Map</title>
 
 <style>
-/* ======================================================
-   GLOBAL
-====================================================== */
-body{
-  margin:0;
-  background:#fff;
-  font-family:Arial, sans-serif;
-  display:flex;
-  justify-content:center;
-}
+  body {
+    margin: 0;
+    background: white;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    font-family: Arial, sans-serif;
+  }
 
-.wrapper{
-  width:100%;
-  max-width:1200px;
-}
+  .map {
+    position: relative;
+    width: 1000px;
+    height: 600px;
+    background: white;
+    transform-origin: top left;
+    transition: transform 0.2s ease;
+  }
 
-/* Partition line */
-.partition{
-  width:100%;
-  height:5px;
-  background:linear-gradient(to right,#777,#ddd,#777);
-  margin:50px 0;
-}
+  @media (max-width: 1200px) { .map { transform: scale(0.85); } }
+  @media (max-width: 1000px) { .map { transform: scale(0.7); } }
+  @media (max-width: 800px)  { .map { transform: scale(0.55); } }
+  @media (max-width: 600px)  { .map { transform: scale(0.42); } }
+  @media (max-width: 480px)  { .map { transform: scale(0.35); } }
 
-/* ======================================================
-   FIRST SCRIPT (TOP MAP) — UNTOUCHED LOGIC
-====================================================== */
-.top-container{
-  display:flex;
-  justify-content:center;
-}
+  .booth {
+    position: absolute;
+    background: #d7f4c4;
+    border: 2px solid #3b5a2a;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.1s, box-shadow 0.1s;
+    width: 100px;
+    height: 60px;
+    text-align: center;
+    padding: 4px;
+  }
 
-.top-map{
-  position:relative;
-  width:1000px;
-  height:600px;
-  background:white;
-  transform-origin:top left;
-}
+  .booth span {
+    font-size: 12px;
+    line-height: 1.2;
+  }
 
-@media (max-width:1200px){ .top-map{transform:scale(.85);} }
-@media (max-width:1000px){ .top-map{transform:scale(.7);} }
-@media (max-width:800px){ .top-map{transform:scale(.55);} }
-@media (max-width:600px){ .top-map{transform:scale(.42);} }
-@media (max-width:480px){ .top-map{transform:scale(.35);} }
+  .booth:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 6px 10px rgba(0,0,0,0.2);
+  }
 
-.top-map .booth{
-  position:absolute;
-  background:#d7f4c4;
-  border:2px solid #3b5a2a;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-weight:bold;
-  cursor:pointer;
-  width:100px;
-  height:60px;
-  text-align:center;
-  padding:4px;
-}
+  /* BOOKED — keep original color */
+  .booth.booked {
+    cursor: not-allowed;
+    opacity: 0.75; /* visual hint only */
+  }
 
-.top-map .booth span{
-  font-size:12px;
-  line-height:1.2;
-}
+  .pink-booth {
+    background: #ffb6d9;
+    border: 2px solid #b30059;
+  }
 
-.top-map .booth:hover{
-  transform:translateY(-4px);
-  box-shadow:0 6px 10px rgba(0,0,0,.2);
-}
+  .tooltip {
+    position: fixed;
+    pointer-events: none;
+    background: rgba(30,30,30,0.9);
+    color: #fff;
+    padding: 5px 8px;
+    border-radius: 6px;
+    font-size: 13px;
+    display: none;
+    z-index: 999;
+  }
 
-.top-map .booked{
-  background:#bfbfbf!important;
-  border-color:#6b6b6b!important;
-  cursor:not-allowed;
-}
+  .center-rect {
+    position: absolute;
+    background: #b87fff;
+    border: 3px solid #7038b8;
+    border-radius: 6px;
+    left: 340px;
+    top: 150px;
+    width: 80px;
+    height: 220px;
+  }
 
-.top-map .pink-booth{
-  background:#ffb6d9;
-  border-color:#b30059;
-}
+  /* Booth positions */
+  #b10{ left:60px; top:40px; }
+  #b20{ left:170px; top:40px; }
+  #b7 { left:280px; top:40px; }
+  #b8 { left:390px; top:40px; }
+  #b9 { left:500px; top:40px; }
+  #b19{ left:610px; top:40px; }
+  #b18{ left:720px; top:40px; }
 
-.top-tooltip{
-  position:fixed;
-  pointer-events:none;
-  background:rgba(30,30,30,.9);
-  color:#fff;
-  padding:5px 8px;
-  border-radius:6px;
-  font-size:13px;
-  display:none;
-  z-index:1000;
-}
+  #b17{ left:720px; top:130px; }
+  #b16{ left:720px; top:220px; }
+  #b15{ left:720px; top:310px; }
 
-/* Center & door */
-.center-rect{
-  position:absolute;
-  background:#b87fff;
-  border:3px solid #7038b8;
-  left:340px;
-  top:150px;
-  width:80px;
-  height:220px;
-}
+  #b11{ left:60px; bottom:120px; }
+  #b12{ left:170px; bottom:120px; }
+  #b1 { left:280px; bottom:120px; }
+  #b2 { left:460px; bottom:120px; }
+  #b13{ left:570px; bottom:120px; }
+  #b14{ left:680px; bottom:120px; }
 
-.door{
-  position:absolute;
-  bottom:120px;
-  left:390px;
-  width:60px;
-  height:10px;
-  background:white;
-  border:2px dashed #888;
-}
+  #b4 { left:200px; top:180px; }
+  #b3 { left:200px; top:260px; }
+  #b6 { left:480px; top:180px; }
+  #b5 { left:480px; top:260px; }
 
-/* Booth positions */
-#b10{left:60px;top:40px;}
-#b20{left:170px;top:40px;}
-#b7{left:280px;top:40px;}
-#b8{left:390px;top:40px;}
-#b9{left:500px;top:40px;}
-#b19{left:610px;top:40px;}
-#b18{left:720px;top:40px;}
+  /* UMKM */
+  #p5 { left:60px; bottom:40px; }
+  #p4 { left:170px; bottom:40px; }
+  #p3 { left:280px; bottom:40px; }
+  #p2 { left:460px; bottom:40px; }
+  #p1 { left:570px; bottom:40px; }
 
-#b17{left:720px;top:130px;}
-#b16{left:720px;top:220px;}
-#b15{left:720px;top:310px;}
-
-#b11{left:60px;bottom:120px;}
-#b12{left:170px;bottom:120px;}
-#b1{left:280px;bottom:120px;}
-#b2{left:460px;bottom:120px;}
-#b13{left:570px;bottom:120px;}
-#b14{left:680px;bottom:120px;}
-
-#b4{left:200px;top:180px;}
-#b3{left:200px;top:260px;}
-#b6{left:480px;top:180px;}
-#b5{left:480px;top:260px;}
-
-#p5{left:60px;bottom:40px;}
-#p4{left:170px;bottom:40px;}
-#p3{left:280px;bottom:40px;}
-#p2{left:460px;bottom:40px;}
-#p1{left:570px;bottom:40px;}
-
-/* ======================================================
-   SECOND SCRIPT (BOTTOM MAP)
-====================================================== */
-.bottom-container{
-  display:flex;
-  justify-content:center;
-}
-
-:root{
-  --w:979px;
-  --h:208px;
-}
-
-.stage{
-  position:relative;
-  width:min(100vw - 24px, var(--w));
-  aspect-ratio:979/208;
-}
-
-.bottom-map{
-  position:absolute;
-  left:0;
-  top:0;
-  width:var(--w);
-  height:var(--h);
-  transform-origin:top left;
-  transform:scale(calc((min(100vw - 24px, var(--w))) / var(--w)));
-}
-
-.bottom-map .booth{
-  position:absolute;
-  border:2px solid #333;
-  display:flex;
-  justify-content:center;
-  align-items:center;
-  font-weight:700;
-  padding:6px;
-  text-align:center;
-  font-size:13px;
-  cursor:pointer;
-}
-
-.bottom-map .silver{background:#e6e6e6;border-color:#888;}
-.bottom-map .gold{background:#ffd580;border-color:#b58900;}
-.bottom-map .blue{background:#b5dcfe;border-color:#2a6db0;}
-.bottom-map .booked{background:#bfbfbf!important;border-color:#777!important;}
-
-#S1{left:172px;top:96px;width:46px;height:112px;}
-#S2{left:88px;top:27px;width:73px;height:44px;}
-#S3{left:5px;top:27px;width:73px;height:44px;}
-#G1{left:316px;top:82px;width:152px;height:56px;}
-#G2{left:551px;top:82px;width:152px;height:56px;}
-#P1{left:823px;top:23px;width:134px;height:168px;}
-
-.bottom-tooltip{
-  position:fixed;
-  pointer-events:none;
-  background:rgba(40,40,40,.92);
-  color:#fff;
-  padding:6px 10px;
-  border-radius:6px;
-  font-size:13px;
-  display:none;
-  z-index:1000;
-}
+  .door {
+    position: absolute;
+    bottom: 120px;
+    left: 390px;
+    width: 60px;
+    height: 10px;
+    background: white;
+    border: 2px dashed #888;
+  }
 </style>
 </head>
 
 <body>
-<div class="wrapper">
 
-<!-- ================= TOP MAP ================= -->
-<div class="top-container">
-  <div class="top-map">
-    <!-- Standard -->
-    <div class="booth" id="b10"><span></span></div>
-    <div class="booth" id="b20"><span></span></div>
-    <div class="booth" id="b7"><span></span></div>
-    <div class="booth" id="b8"><span></span></div>
-    <div class="booth" id="b9"><span></span></div>
-    <div class="booth" id="b19"><span></span></div>
-    <div class="booth" id="b18"><span></span></div>
-    <div class="booth" id="b17"><span></span></div>
-    <div class="booth" id="b16"><span></span></div>
-    <div class="booth" id="b15"><span></span></div>
-    <div class="booth" id="b11"><span></span></div>
-    <div class="booth" id="b12"><span></span></div>
-    <div class="booth" id="b1"><span></span></div>
-    <div class="booth" id="b2"><span></span></div>
-    <div class="booth" id="b13"><span></span></div>
-    <div class="booth" id="b14"><span></span></div>
-    <div class="booth" id="b4"><span></span></div>
-    <div class="booth" id="b3"><span></span></div>
-    <div class="booth" id="b6"><span></span></div>
-    <div class="booth" id="b5"><span></span></div>
+<div class="map">
+  <!-- STANDARD -->
+  <div class="booth" id="b10"><span></span></div>
+  <div class="booth" id="b20"><span></span></div>
+  <div class="booth" id="b7"><span></span></div>
+  <div class="booth" id="b8"><span></span></div>
+  <div class="booth" id="b9"><span></span></div>
+  <div class="booth" id="b19"><span></span></div>
+  <div class="booth" id="b18"><span></span></div>
+  <div class="booth" id="b17"><span></span></div>
+  <div class="booth" id="b16"><span></span></div>
+  <div class="booth" id="b15"><span></span></div>
+  <div class="booth" id="b11"><span></span></div>
+  <div class="booth" id="b12"><span></span></div>
+  <div class="booth" id="b1"><span></span></div>
+  <div class="booth" id="b2"><span></span></div>
+  <div class="booth" id="b13"><span></span></div>
+  <div class="booth" id="b14"><span></span></div>
+  <div class="booth" id="b4"><span></span></div>
+  <div class="booth" id="b3"><span></span></div>
+  <div class="booth" id="b6"><span></span></div>
+  <div class="booth" id="b5"><span></span></div>
 
-    <!-- UMKM -->
-    <div class="booth pink-booth" id="p5"><span></span></div>
-    <div class="booth pink-booth" id="p4"><span></span></div>
-    <div class="booth pink-booth" id="p3"><span></span></div>
-    <div class="booth pink-booth" id="p2"><span></span></div>
-    <div class="booth pink-booth" id="p1"><span></span></div>
+  <!-- UMKM -->
+  <div class="booth pink-booth" id="p5"><span></span></div>
+  <div class="booth pink-booth" id="p4"><span></span></div>
+  <div class="booth pink-booth" id="p3"><span></span></div>
+  <div class="booth pink-booth" id="p2"><span></span></div>
+  <div class="booth pink-booth" id="p1"><span></span></div>
 
-    <div class="center-rect"></div>
-    <div class="door"></div>
-  </div>
+  <div class="center-rect"></div>
+  <div class="door"></div>
 </div>
 
-<div class="top-tooltip" id="topTooltip"></div>
-
-<div class="partition"></div>
-
-<!-- ================= BOTTOM MAP ================= -->
-<div class="bottom-container">
-  <div class="stage">
-    <div class="bottom-map">
-      <div class="booth silver" id="S1"></div>
-      <div class="booth silver" id="S2"></div>
-      <div class="booth silver" id="S3"></div>
-      <div class="booth gold" id="G1"></div>
-      <div class="booth gold" id="G2"></div>
-      <div class="booth blue" id="P1"></div>
-    </div>
-  </div>
-</div>
-
-<div class="bottom-tooltip" id="bottomTooltip"></div>
-
-</div>
+<div class="tooltip" id="tooltip"></div>
 
 <script>
-/* ================= TOP MAP SCRIPT ================= */
-const topTooltip=document.getElementById("topTooltip");
-const topBooths=document.querySelectorAll(".top-map .booth");
+const tooltip = document.getElementById("tooltip");
+const booths = document.querySelectorAll(".booth");
 
-const topBooked={
-  b1:"PT. Berjaya Mandarin Opto-Medic",
-  b2:"PT Hanaka Farmasindo",
-  b3:"PT Triastri Meditama",
-  b4:"PT. Maju Jaya Medika",
-  b5:"PT. MEDEQ Mandiri Utama",
-  b6:"PT. Sanbe Farma",
-  b7:"PT Anugerah Pharmindo",
-  b8:"PT. Ferron Par Pharmaceuticals",
-  b9:"PT Erlangga Edi Laboratories (Erela)",
-  b10:"PT Mulya Husada Jaya",
-  b11:"PT Transmedic Indonesia",
-  b12:"PT. Pusaka Mulya Medika",
-  b13:"PT Pancaraya Krisna Mandiri",
-  b14:"PT Optik Tunggal Sempurna",
-  b15:"PT Afina Sinar Cemerlang",
-  b16:"PT. Majasa Tunggal Abadi",
-  b17:"PT OPMIC Perkasa Mandiri",
-  b18:"PT. Inti Cakrawala Jaya",
-  b19:"PT. Topsindo Megah Utama",
-  b20:"PT Tawada Healthcare",
-  p1:"Mahavira",
-  p2:"Toko Wiwid Lombok",
-  p3:"Crocus Pearl",
-  p4:"Alif Souvenir",
-  p5:"Abidzar Pearl"
+const booked = {
+  b1: "PT. Berjaya Mandarin Opto-Medic",
+  b2: "PT Hanaka Farmasindo",
+  b3: "PT Triastri Meditama",
+  b4: "PT. Maju Jaya Medika",
+  b5: "PT. MEDEQ Mandiri Utama",
+  b6: "PT. Sanbe Farma",
+  b7: "PT Anugerah Pharmindo",
+  b8: "PT. Ferron Par Pharmaceuticals",
+  b9: "PT Erlangga Edi Laboratories (Erela)",
+  b10: "PT Mulya Husada Jaya",
+  b11: "PT Transmedic Indonesia",
+  b12: "PT. Pusaka Mulya Medika",
+  b13: "PT Pancaraya Krisna Mandiri",
+  b14: "PT Optik Tunggal Sempurna",
+  b15: "PT Afina Sinar Cemerlang",
+  b16: "PT. Majasa Tunggal Abadi",
+  b17: "PT OPMIC Perkasa Mandiri",
+  b18: "PT. Inti Cakrawala Jaya",
+  b19: "PT. Topsindo Megah Utama",
+  b20: "PT Tawada Healthcare",
+
+  p1: "Mahavira",
+  p2: "Toko Wiwid Lombok",
+  p3: "Crocus Pearl",
+  p4: "Alif Souvenir",
+  p5: "Abidzar Pearl"
 };
 
-topBooths.forEach(b=>{
-  const id=b.id;
-  const label=b.querySelector("span");
-  if(topBooked[id]){
+booths.forEach(b => {
+  const id = b.id;
+  const label = b.querySelector("span");
+
+  if (booked[id]) {
     b.classList.add("booked");
-    label.textContent=topBooked[id];
-  }else{
-    label.textContent="AVAILABLE";
+    label.textContent = booked[id];
+  } else {
+    label.textContent = "AVAILABLE";
   }
 
-  b.addEventListener("mousemove",e=>{
-    topTooltip.innerHTML=topBooked[id]
-      ? `<strong>Booked</strong><br>${topBooked[id]}`
+  b.addEventListener("mousemove", e => {
+    tooltip.innerHTML = booked[id]
+      ? `<strong>Booked</strong><br>${booked[id]}`
       : `<strong>Available</strong>`;
-    topTooltip.style.display="block";
-    topTooltip.style.left=e.pageX+12+"px";
-    topTooltip.style.top=e.pageY-30+"px";
+    tooltip.style.display = "block";
+    tooltip.style.left = e.pageX + 12 + "px";
+    tooltip.style.top = e.pageY - 30 + "px";
   });
 
-  b.addEventListener("mouseleave",()=>topTooltip.style.display="none");
-});
-
-/* ================= BOTTOM MAP SCRIPT ================= */
-const bottomTooltip=document.getElementById("bottomTooltip");
-const bottomBooths=document.querySelectorAll(".bottom-map .booth");
-
-const bottomBooked={
-  S1:"PT. USM",
-  S2:"PT. Katamata Optomedik",
-  S3:"PT. Global Selaras Medika",
-  G1:"PT Meiji Indonesian Pharmaceutical Industries x PT Ophtalindo Jaya",
-  G2:"JEC Eye Hospital dan Clinic",
-  P1:"PT. Cendo"
-};
-
-bottomBooths.forEach(b=>{
-  const id=b.id;
-  let type="",price="";
-
-  if(id.startsWith("S")){type="Silver Booth";price="Rp. 50.000.000";}
-  if(id.startsWith("G")){type="Gold Booth";price="Rp. 80.000.000";}
-  if(id.startsWith("P")){type="Platinum Booth";price="Rp. 100.000.000";}
-
-  if(bottomBooked[id]){
-    b.classList.add("booked");
-    b.textContent=bottomBooked[id];
-  }else{
-    b.textContent="AVAILABLE";
-  }
-
-  b.addEventListener("mousemove",e=>{
-    bottomTooltip.innerHTML=bottomBooked[id]
-      ? `<strong>Sudah dibooking</strong><br>${type}<br>${bottomBooked[id]}`
-      : `Tersedia<br><strong>${type}</strong><br>${price}`;
-    bottomTooltip.style.display="block";
-    bottomTooltip.style.left=e.pageX+10+"px";
-    bottomTooltip.style.top=e.pageY-40+"px";
+  b.addEventListener("mouseleave", () => {
+    tooltip.style.display = "none";
   });
-
-  b.addEventListener("mouseleave",()=>bottomTooltip.style.display="none");
 });
 </script>
 
